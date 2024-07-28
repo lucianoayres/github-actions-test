@@ -23,7 +23,7 @@ jobs:
             - name: Clone rjip repository
               run: |
                   if [ ! -d "rjip" ]; then
-                    git clone git clone https://github.com/lucianoayres/rjip.git
+                    git clone https://github.com/lucianoayres/rjip.git
                   fi
 
             - name: Run rjip command and handle output
