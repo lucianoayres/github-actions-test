@@ -1,8 +1,9 @@
 name: Execute Shell Script
 
 on:
-    issue_comment:
-        types: [created]
+    push:
+        branches:
+            - main
 
 permissions:
     contents: write # Allow workflow to push changes
@@ -31,7 +32,11 @@ jobs:
               run: |
                   #!/bin/bash
 
+                  set -e  # Exit on any error
+
+                  # Function to run rjip command
                   run_rjip_command() {
+                    echo "Running rjip command..."
                     cd rjip/dist
                     command_output=$(./rjip ../../data.json id ../../last_picks.json)
                     cd ../..
@@ -39,16 +44,21 @@ jobs:
                     echo "$command_output" > command_output.json
                     status=$(echo "$command_output" | jq -r '.status')
                     echo "status=$status" >> $GITHUB_ENV
+                    echo "command_output=$command_output" >> $GITHUB_ENV
                   }
 
+                  # Function to handle success status
                   handle_success() {
+                    echo "Handling success..."
                     item=$(echo "$command_output" | jq '.item')
                     echo "$item" > item.json
                     echo "item.json has been saved."
                     echo "commit_changes=true" >> $GITHUB_ENV
                   }
 
+                  # Function to handle error status
                   handle_error() {
+                    echo "Handling error..."
                     error_code=$(echo "$command_output" | jq -r '.error_code')
                     error_message=$(echo "$command_output" | jq -r '.message')
 
@@ -81,6 +91,7 @@ jobs:
                     esac
                   }
 
+                  # Run the command and handle the output
                   run_rjip_command
 
                   if [ "$status" == "success" ]; then
@@ -89,11 +100,13 @@ jobs:
                     handle_error
                   else
                     echo "Unknown status: $status"
+                    exit 1
                   fi
 
             - name: Commit changes
               if: env.commit_changes == 'true'
               run: |
+                  echo "Committing changes..."
                   git config --global user.name 'github-actions[bot]'
                   git config --global user.email 'github-actions[bot]@users.noreply.github.com'
                   git add item.json last_picks.json
