@@ -1,0 +1,101 @@
+name: Execute Shell Script
+
+on:
+    schedule:
+        - cron: "43 2 * * *" # Run every day at 11:43 PM UTC
+
+permissions:
+    contents: write # Allow workflow to push changes
+    id-token: write # Allow workflow to use the ID token
+
+jobs:
+    execute_script:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Download data.json
+              run: |
+                  curl -o data.json https://raw.githubusercontent.com/lucianoayres/brazil-stocks-tickers-json/main/b3_stocks_tickers.json
+
+            - name: Clone rjip repository
+              run: |
+                  if [ ! -d "rjip" ]; then
+                    git clone git@github.com:lucianoayres/rjip.git
+                  fi
+
+            - name: Run rjip command and handle output
+              id: run_rjip
+              run: |
+                  #!/bin/bash
+
+                  run_rjip_command() {
+                    cd rjip/dist
+                    command_output=$(./rjip ../../data.json id ../../last_picks.json)
+                    cd ../..
+
+                    echo "$command_output" > command_output.json
+                    status=$(echo "$command_output" | jq -r '.status')
+                    echo "status=$status" >> $GITHUB_ENV
+                  }
+
+                  handle_success() {
+                    item=$(echo "$command_output" | jq '.item')
+                    echo "$item" > item.json
+                    echo "item.json has been saved."
+                    echo "commit_changes=true" >> $GITHUB_ENV
+                  }
+
+                  handle_error() {
+                    error_code=$(echo "$command_output" | jq -r '.error_code')
+                    error_message=$(echo "$command_output" | jq -r '.message')
+
+                    case "$error_code" in
+                        "invalid_or_nonexistent_json_file")
+                            echo "Error: Invalid or non-existent JSON file. Message: $error_message"
+                            ;;
+                        "empty_input_json_file")
+                            echo "Error: Empty input JSON file. Message: $error_message"
+                            ;;
+                        "invalid_property_name")
+                            echo "Error: Invalid property name provided. Message: $error_message"
+                            ;;
+                        "all_items_picked")
+                            echo "Error: All items have been picked and no new items are available. Message: $error_message"
+                            rm ../../last_picks.json
+                            run_rjip_command
+                            if [ "$status" == "success" ]; then
+                                handle_success
+                            else
+                                echo "Retry failed with status: $status"
+                            fi
+                            ;;
+                        "generic_error")
+                            echo "Error: An unexpected error occurred. Message: $error_message"
+                            ;;
+                        *)
+                            echo "Error: An unknown error occurred. Message: $error_message"
+                            ;;
+                    esac
+                  }
+
+                  run_rjip_command
+
+                  if [ "$status" == "success" ]; then
+                    handle_success
+                  elif [ "$status" == "error" ]; then
+                    handle_error
+                  else
+                    echo "Unknown status: $status"
+                  fi
+
+            - name: Commit changes
+              if: env.commit_changes == 'true'
+              run: |
+                  git config --global user.name 'github-actions[bot]'
+                  git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+                  git add item.json last_picks.json
+                  git commit -m "Add item.json and update last_picks.json"
+                  git push
