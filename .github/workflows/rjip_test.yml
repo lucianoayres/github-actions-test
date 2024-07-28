@@ -1,9 +1,8 @@
 name: Execute Shell Script
 
 on:
-    push:
-        branches:
-            - main
+    issue_comment:
+        types: [created]
 
 permissions:
     contents: write # Allow workflow to push changes
