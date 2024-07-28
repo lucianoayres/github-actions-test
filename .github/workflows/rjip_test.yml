@@ -39,7 +39,7 @@ jobs:
                     echo "Running rjip command..."
                     cd rjip/dist
                     if [ -f "./rjip" ]; then
-                      command_output=$(./rjip ../../data.json picker ../../last_picks.json) || true
+                      command_output=$(./rjip ../../data.json ticker ../../last_picks.json) || true
                       echo "Command output: $command_output"
                       cd ../..
 
