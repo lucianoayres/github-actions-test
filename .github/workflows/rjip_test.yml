@@ -23,22 +23,29 @@ jobs:
             - name: Clone rjip repository
               run: |
                   if [ ! -d "rjip" ]; then
+                    echo "Cloning rjip repository..."
                     git clone https://github.com/lucianoayres/rjip.git
+                  else
+                    echo "rjip directory already exists, skipping clone."
                   fi
 
             - name: Run rjip command and handle output
               id: run_rjip
               run: |
                   #!/bin/bash
+                  set -x  # Print commands and their arguments as they are executed
 
-                  set -e  # Exit on any error
-
-                  # Function to run rjip command
                   run_rjip_command() {
                     echo "Running rjip command..."
                     cd rjip/dist
-                    command_output=$(./rjip ../../data.json id ../../last_picks.json)
-                    cd ../..
+                    if [ -f "./rjip" ]; then
+                      command_output=$(./rjip ../../data.json id ../../last_picks.json)
+                      echo "Command output: $command_output"
+                      cd ../..
+                    else
+                      echo "rjip binary not found!"
+                      exit 1
+                    fi
 
                     echo "$command_output" > command_output.json
                     status=$(echo "$command_output" | jq -r '.status')
@@ -46,7 +53,6 @@ jobs:
                     echo "command_output=$command_output" >> $GITHUB_ENV
                   }
 
-                  # Function to handle success status
                   handle_success() {
                     echo "Handling success..."
                     item=$(echo "$command_output" | jq '.item')
@@ -55,7 +61,6 @@ jobs:
                     echo "commit_changes=true" >> $GITHUB_ENV
                   }
 
-                  # Function to handle error status
                   handle_error() {
                     echo "Handling error..."
                     error_code=$(echo "$command_output" | jq -r '.error_code')
@@ -90,7 +95,6 @@ jobs:
                     esac
                   }
 
-                  # Run the command and handle the output
                   run_rjip_command
 
                   if [ "$status" == "success" ]; then
@@ -111,3 +115,5 @@ jobs:
                   git add item.json last_picks.json
                   git commit -m "Add item.json and update last_picks.json"
                   git push
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
