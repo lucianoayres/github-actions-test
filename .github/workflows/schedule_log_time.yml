@@ -1,0 +1,32 @@
+name: Log Time
+
+on:
+    schedule:
+        - cron: "*/5 * * * *" # Run every 5 minutes
+
+jobs:
+    log_time:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v2
+
+            - name: Get current time
+              id: get-time
+              run: echo "current_time=$(date -u '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
+
+            - name: Append current time to log file
+              run: |
+                  if [ ! -f log_time.txt ]; then
+                    touch log_time.txt
+                  fi
+                  echo "$current_time" >> log_time.txt
+
+            - name: Commit changes
+              run: |
+                  git config --global user.name 'github-actions[bot]'
+                  git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+                  git add log_time.txt
+                  git commit -m "Append current time to log_time.txt"
+                  git push
