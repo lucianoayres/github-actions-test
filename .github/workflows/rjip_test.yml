@@ -39,7 +39,7 @@ jobs:
                     echo "Running rjip command..."
                     cd rjip/dist
                     if [ -f "./rjip" ]; then
-                      command_output=$(./rjip ../../data.json ticker ../../last_picks.json) || true
+                      command_output=$(./rjip ../../data.json ticker ../github-actions-test/last_picks.json)
                       echo "Command output: $command_output"
                       cd ../..
                     else
@@ -56,7 +56,7 @@ jobs:
                   handle_success() {
                     echo "Handling success..."
                     item=$(echo "$command_output" | jq '.item')
-                    echo "$item" > item.json
+                    echo "$item" > github-actions-test/item.json
                     echo "item.json has been saved."
                     echo "commit_changes=true" >> $GITHUB_ENV
                   }
@@ -65,9 +65,6 @@ jobs:
                     echo "Handling error..."
                     error_code=$(echo "$command_output" | jq -r '.error_code')
                     error_message=$(echo "$command_output" | jq -r '.message')
-
-                    # Print working directory for debugging
-                    echo "Current working directory: $(pwd)"
 
                     case "$error_code" in
                         "invalid_or_nonexistent_json_file")
@@ -81,17 +78,7 @@ jobs:
                             ;;
                         "all_items_picked")
                             echo "Error: All items have been picked and no new items are available. Message: $error_message"
-
-                            # Print directory listing for debugging
-                            echo "Directory listing:"
-                            ls -la ../../
-
-                            if [ -f "../../last_picks.json" ]; then
-                                rm ../../last_picks.json
-                            else
-                                echo "No last_picks.json file to remove at ../../last_picks.json"
-                            fi
-
+                            rm ../github-actions-test/last_picks.json
                             run_rjip_command
                             if [ "$status" == "success" ]; then
                                 handle_success
@@ -125,8 +112,6 @@ jobs:
                   echo "Committing changes..."
                   git config --global user.name 'github-actions[bot]'
                   git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-                  git add item.json last_picks.json
+                  git add github-actions-test/item.json github-actions-test/last_picks.json
                   git commit -m "Add item.json and update last_picks.json"
                   git push
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
