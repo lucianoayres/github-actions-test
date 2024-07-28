@@ -40,17 +40,19 @@ jobs:
                     cd rjip/dist
                     if [ -f "./rjip" ]; then
                       command_output=$(./rjip ../../data.json id ../../last_picks.json)
+                      rjip_exit_code=$?  # Capture exit code
                       echo "Command output: $command_output"
                       cd ../..
+
+                      echo "$command_output" > command_output.json
+                      status=$(echo "$command_output" | jq -r '.status')
+                      echo "status=$status" >> $GITHUB_ENV
+                      echo "command_output=$command_output" >> $GITHUB_ENV
+                      echo "rjip_exit_code=$rjip_exit_code" >> $GITHUB_ENV
                     else
                       echo "rjip binary not found!"
                       exit 1
                     fi
-
-                    echo "$command_output" > command_output.json
-                    status=$(echo "$command_output" | jq -r '.status')
-                    echo "status=$status" >> $GITHUB_ENV
-                    echo "command_output=$command_output" >> $GITHUB_ENV
                   }
 
                   handle_success() {
