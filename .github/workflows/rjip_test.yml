@@ -39,7 +39,7 @@ jobs:
                     echo "Running rjip command..."
                     cd rjip/dist
                     if [ -f "./rjip" ]; then
-                      command_output=$(./rjip ../../data.json ticker ../github-actions-test/last_picks.json)
+                      command_output=$(./rjip ../../data.json ticker ../../last_picks.json)
                       echo "Command output: $command_output"
                       cd ../..
                     else
@@ -56,7 +56,7 @@ jobs:
                   handle_success() {
                     echo "Handling success..."
                     item=$(echo "$command_output" | jq '.item')
-                    echo "$item" > github-actions-test/item.json
+                    echo "$item" > item.json
                     echo "item.json has been saved."
                     echo "commit_changes=true" >> $GITHUB_ENV
                   }
@@ -78,12 +78,18 @@ jobs:
                             ;;
                         "all_items_picked")
                             echo "Error: All items have been picked and no new items are available. Message: $error_message"
-                            rm ../github-actions-test/last_picks.json
-                            run_rjip_command
-                            if [ "$status" == "success" ]; then
-                                handle_success
+                            # Ensure correct path to last_picks.json
+                            if [ -f "last_picks.json" ]; then
+                                rm last_picks.json
+                                run_rjip_command
+                                if [ "$status" == "success" ]; then
+                                    handle_success
+                                else
+                                    echo "Retry failed with status: $status"
+                                fi
                             else
-                                echo "Retry failed with status: $status"
+                                echo "last_picks.json not found in the root directory!"
+                                exit 1
                             fi
                             ;;
                         "generic_error")
@@ -112,6 +118,6 @@ jobs:
                   echo "Committing changes..."
                   git config --global user.name 'github-actions[bot]'
                   git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-                  git add github-actions-test/item.json github-actions-test/last_picks.json
+                  git add item.json last_picks.json
                   git commit -m "Add item.json and update last_picks.json"
                   git push
