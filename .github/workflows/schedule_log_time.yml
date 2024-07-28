@@ -2,7 +2,7 @@ name: Log Time
 
 on:
     schedule:
-        - cron: "43 23 * * *" # Run every day at 11:43 PM UTC
+        - cron: "43 2 * * *" # Run every day at 11:43 PM UTC
 
 jobs:
     log_time:
