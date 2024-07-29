@@ -26,8 +26,8 @@ runs:
               #!/bin/bash
               set -euxo pipefail  # Enable strict error handling
 
-              run_rjip_command() {
-                echo "Running rjip command..."
+              run_util_command() {
+                echo "Running util command..."
                 cd $(dirname ${{ inputs.UTIL_BINARY_PATH }})
                 if [ ! -f "./$(basename ${{ inputs.UTIL_BINARY_PATH }})" ]; then
                   echo "binary not found!"
@@ -63,7 +63,7 @@ runs:
                         echo "Error: All items have been picked and no new items are available. Message: $error_message"
                         if [ -f "${{ inputs.last_picks_file }}" ]; then
                             rm ${{ inputs.last_picks_file }}
-                            run_rjip_command
+                            run_util_command
                             if [ "$status" == "success" ]; then
                                 handle_success
                             else
@@ -82,7 +82,7 @@ runs:
                 esac
               }
 
-              run_rjip_command
+              run_util_command
               if [ "$status" == "success" ]; then
                 handle_success
               elif [ "$status" == "error" ]; then
