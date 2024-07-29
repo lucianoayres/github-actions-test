@@ -2,6 +2,17 @@ name: Run RJIP Command
 
 description: Runs the rjip command and handles the output.
 
+inputs:
+    data_json_file:
+        description: "The name of the data.json file"
+        required: true
+    last_picks_file:
+        description: "The name of the last picks JSON file"
+        required: true
+    rjip_binary_path:
+        description: "The path to the rjip binary"
+        required: true
+
 runs:
     using: "composite"
     steps:
@@ -11,12 +22,12 @@ runs:
 
               run_rjip_command() {
                 echo "Running rjip command..."
-                cd rjip/dist
+                cd $(dirname ${{ inputs.rjip_binary_path }})
                 if [ ! -f "./rjip" ]; then
                   echo "rjip binary not found!"
                   exit 1
                 fi
-                command_output=$(./rjip ../../data.json ticker ../../last_picks.json || true)
+                command_output=$(./rjip ../../${{ inputs.data_json_file }} ticker ../../${{ inputs.last_picks_file }} || true)
                 echo "Command output: $command_output"
                 cd ../..
                 echo "$command_output" > command_output.json
@@ -44,8 +55,8 @@ runs:
                         ;;
                     "all_items_picked")
                         echo "Error: All items have been picked and no new items are available. Message: $error_message"
-                        if [ -f "last_picks.json" ]; then
-                            rm last_picks.json
+                        if [ -f "${{ inputs.last_picks_file }}" ]; then
+                            rm ${{ inputs.last_picks_file }}
                             run_rjip_command
                             if [ "$status" == "success" ]; then
                                 handle_success
@@ -54,7 +65,7 @@ runs:
                                 exit 1
                             fi
                         else
-                            echo "last_picks.json not found in the root directory!"
+                            echo "${{ inputs.last_picks_file }} not found in the root directory!"
                             exit 1
                         fi
                         ;;
