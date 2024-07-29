@@ -1,6 +1,6 @@
-name: Clone RJIP Repository
+name: Clone Repository
 
-description: Clones the rjip repository if not already present.
+description: Clones the rJip CLI repository if not already present.
 
 runs:
     using: "composite"

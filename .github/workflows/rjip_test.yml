@@ -19,11 +19,11 @@ jobs:
             - name: Download data.json
               uses: ./.github/actions/download-data
 
-            - name: Clone rjip repository
-              uses: ./.github/actions/clone-rjip
+            - name: Clone rJip CLI repository
+              uses: ./.github/actions/clone-repository
 
-            - name: Run rjip command and handle output
-              uses: ./.github/actions/run-rjip
+            - name: Run rJip CLI to pick a random item from the JSON, save it and handle output
+              uses: ./.github/actions/store-data
 
             - name: Commit changes
               if: env.commit_changes == 'true'

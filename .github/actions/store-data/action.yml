@@ -1,6 +1,6 @@
-name: Run RJIP Command
+name: Store Data
 
-description: Runs the rjip command and handles the output.
+description: Runs the rjip CLI to pick a random item from the JSON, save it and handles the output.
 
 runs:
     using: "composite"
