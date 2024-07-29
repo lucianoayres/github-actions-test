@@ -2,5 +2,13 @@
     {
         "ticker": "TCNO",
         "name": "TECNOSOLO"
+    },
+    {
+        "ticker": "AALR",
+        "name": "ALLIAR"
+    },
+    {
+        "ticker": "TXRX",
+        "name": "TEX RENAUX"
     }
 ]
