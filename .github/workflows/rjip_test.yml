@@ -1,4 +1,4 @@
-name: Execute Shell Script
+name: rjip Test Workflow
 
 on:
     issue_comment:
@@ -18,21 +18,12 @@ jobs:
 
             - name: Download data.json
               uses: ./.github/actions/download-data
-              with:
-                  data_json_url: "https://raw.githubusercontent.com/lucianoayres/brazil-stocks-tickers-json/main/b3_stocks_tickers.json"
-                  data_json_file: "data.json"
 
             - name: Clone rjip repository
               uses: ./.github/actions/clone-rjip
-              with:
-                  rjip_repo: "https://github.com/lucianoayres/rjip.git"
 
             - name: Run rjip command and handle output
               uses: ./.github/actions/run-rjip
-              with:
-                  data_json_file: "data.json"
-                  last_picks_file: "last_picks.json"
-                  rjip_binary_path: "rjip/dist/rjip"
 
             - name: Commit changes
               if: env.commit_changes == 'true'
@@ -40,6 +31,6 @@ jobs:
                   echo "Committing changes..."
                   git config --global user.name 'github-actions[bot]'
                   git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-                  git add item.json ${{ steps.config.outputs.last_picks_file }}
-                  git commit -m "Add item.json and update ${{ steps.config.outputs.last_picks_file }}"
+                  git add item.json last_picks.json
+                  git commit -m "Add item.json and update last_picks.json"
                   git push

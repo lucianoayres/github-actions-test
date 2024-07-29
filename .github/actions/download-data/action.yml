@@ -2,17 +2,8 @@ name: Download Data
 
 description: Downloads the data.json file.
 
-inputs:
-    data_json_url:
-        description: "The URL to download the data.json file"
-        required: true
-    data_json_file:
-        description: "The name of the data.json file"
-        required: true
-
 runs:
     using: "composite"
     steps:
-        - run: |
-              curl -o ${{ inputs.data_json_file }} ${{ inputs.data_json_url }}
+        - run: curl -o data.json https://raw.githubusercontent.com/lucianoayres/brazil-stocks-tickers-json/main/b3_stocks_tickers.json
           shell: bash
