@@ -10,5 +10,9 @@
     {
         "ticker": "LOGG",
         "name": "LOG COM PROP"
+    },
+    {
+        "ticker": "YDUQ",
+        "name": "YDUQS PART"
     }
 ]
