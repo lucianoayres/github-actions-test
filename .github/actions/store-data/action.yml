@@ -1,6 +1,23 @@
 name: Store Data
 
-description: Runs the rjip CLI to pick a random item from the JSON, save it and handles the output.
+description: Runs the rJip CLI to pick a random item from the JSON, save it and handles the output.
+
+inputs:
+    data_json_file:
+        description: "The JSON file to use as input"
+        required: true
+    last_picks_file:
+        description: "The file to track the last picked items"
+        required: true
+    UTIL_BINARY_PATH:
+        description: "The path to the rJip binary"
+        required: true
+    item_json_file:
+        description: "The file to save the picked item"
+        required: true
+    json_comparison_property:
+        description: "The property to compare in the JSON file"
+        required: true
 
 runs:
     using: "composite"
@@ -11,12 +28,12 @@ runs:
 
               run_rjip_command() {
                 echo "Running rjip command..."
-                cd rjip/dist
-                if [ ! -f "./rjip" ]; then
-                  echo "rjip binary not found!"
+                cd $(dirname ${{ inputs.UTIL_BINARY_PATH }})
+                if [ ! -f "./$(basename ${{ inputs.UTIL_BINARY_PATH }})" ]; then
+                  echo "binary not found!"
                   exit 1
                 fi
-                command_output=$(./rjip ../../data.json ticker ../../last_picks.json || true)
+                command_output=$(./$(basename ${{ inputs.UTIL_BINARY_PATH }}) ../../${{ inputs.data_json_file }} ${{ inputs.json_comparison_property }} ../../${{ inputs.last_picks_file }} || true)
                 echo "Command output: $command_output"
                 cd ../..
                 echo "$command_output" > command_output.json
@@ -28,8 +45,8 @@ runs:
               handle_success() {
                 echo "Handling success..."
                 item=$(echo "$command_output" | jq '.item')
-                echo "$item" > item.json
-                echo "item.json has been saved."
+                echo "$item" > ${{ inputs.item_json_file }}
+                echo "${{ inputs.item_json_file }} has been saved."
                 echo "commit_changes=true" >> $GITHUB_ENV
               }
 
@@ -44,8 +61,8 @@ runs:
                         ;;
                     "all_items_picked")
                         echo "Error: All items have been picked and no new items are available. Message: $error_message"
-                        if [ -f "last_picks.json" ]; then
-                            rm last_picks.json
+                        if [ -f "${{ inputs.last_picks_file }}" ]; then
+                            rm ${{ inputs.last_picks_file }}
                             run_rjip_command
                             if [ "$status" == "success" ]; then
                                 handle_success
@@ -54,7 +71,7 @@ runs:
                                 exit 1
                             fi
                         else
-                            echo "last_picks.json not found in the root directory!"
+                            echo "${{ inputs.last_picks_file }} not found in the root directory!"
                             exit 1
                         fi
                         ;;

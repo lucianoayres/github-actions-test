@@ -1,12 +1,22 @@
 name: rjip Test Workflow
 
 on:
-    schedule:
-        - cron: "27 2 * * *" # Run every day at 11:43 PM UTC
+    issue_comment:
+        types: [created]
 
 permissions:
     contents: write # Allow workflow to push changes
     id-token: write # Allow workflow to use the ID token
+
+env:
+    DATA_JSON_URL: "https://raw.githubusercontent.com/lucianoayres/brazil-stocks-tickers-json/main/b3_stocks_tickers.json"
+    DATA_JSON_FILE: "data.json"
+    REPO_URL: "https://github.com/lucianoayres/rjip.git"
+    REPO_DIR: "rjip"
+    UTIL_BINARY_PATH: "rjip/dist/rjip"
+    LAST_PICKS_FILE: "last_picks.json"
+    ITEM_JSON_FILE: "item.json"
+    JSON_COMPARISON_PROPERTY: "ticker"
 
 jobs:
     execute_script:
@@ -18,12 +28,24 @@ jobs:
 
             - name: Download data.json
               uses: ./.github/actions/download-data
+              with:
+                  data_json_url: ${{ env.DATA_JSON_URL }}
+                  data_json_file: ${{ env.DATA_JSON_FILE }}
 
-            - name: Clone rJip CLI repository
+            - name: Clone repository
               uses: ./.github/actions/clone-repository
+              with:
+                  repo_url: ${{ env.REPO_URL }}
+                  repo_dir: ${{ env.REPO_DIR }}
 
             - name: Run rJip CLI to pick a random item from the JSON, save it and handle output
               uses: ./.github/actions/store-data
+              with:
+                  data_json_file: ${{ env.DATA_JSON_FILE }}
+                  last_picks_file: ${{ env.LAST_PICKS_FILE }}
+                  UTIL_BINARY_PATH: ${{ env.UTIL_BINARY_PATH }}
+                  item_json_file: ${{ env.ITEM_JSON_FILE }}
+                  json_comparison_property: ${{ env.JSON_COMPARISON_PROPERTY }}
 
             - name: Commit changes
               if: env.commit_changes == 'true'
@@ -31,6 +53,6 @@ jobs:
                   echo "Committing changes..."
                   git config --global user.name 'github-actions[bot]'
                   git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-                  git add item.json last_picks.json
-                  git commit -m "Add item.json and update last_picks.json"
+                  git add ${{ env.ITEM_JSON_FILE }} ${{ env.LAST_PICKS_FILE }}
+                  git commit -m "Add ${{ env.ITEM_JSON_FILE }} and update ${{ env.LAST_PICKS_FILE }}"
                   git push

@@ -1,15 +1,23 @@
 name: Clone Repository
 
-description: Clones the rJip CLI repository if not already present.
+description: Clones a repository if not already present.
+
+inputs:
+    repo_url:
+        description: "The URL of the repository to clone"
+        required: true
+    repo_dir:
+        description: "The directory name where the repository should be cloned"
+        required: true
 
 runs:
     using: "composite"
     steps:
         - run: |
-              if [ ! -d "rjip" ]; then
-                echo "Cloning rjip repository..."
-                git clone https://github.com/lucianoayres/rjip.git
+              if [ ! -d "${{ inputs.repo_dir }}" ]; then
+                echo "Cloning repository ${{ inputs.repo_url }} into directory ${{ inputs.repo_dir }}..."
+                git clone ${{ inputs.repo_url }} ${{ inputs.repo_dir }}
               else
-                echo "rjip directory already exists, skipping clone."
+                echo "Directory ${{ inputs.repo_dir }} already exists, skipping clone."
               fi
           shell: bash
