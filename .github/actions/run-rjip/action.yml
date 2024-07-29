@@ -74,3 +74,4 @@ runs:
                 echo "Unknown status: $status"
                 exit 1
               fi
+          shell: bash
