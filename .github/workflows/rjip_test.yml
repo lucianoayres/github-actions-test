@@ -38,17 +38,43 @@ jobs:
                   repo_url: ${{ env.REPO_URL }}
                   repo_dir: ${{ env.REPO_DIR }}
 
-            - name: Run rJip CLI to pick a random item from the JSON, save it and handle output
-              uses: ./.github/actions/store-data
+            - name: Run Util Command
+              id: run-util
+              uses: ./.github/actions/run-util-command
               with:
                   data_json_file: ${{ env.DATA_JSON_FILE }}
                   last_picks_file: ${{ env.LAST_PICKS_FILE }}
                   UTIL_BINARY_PATH: ${{ env.UTIL_BINARY_PATH }}
+                  json_comparison_property: ${{ env.JSON_COMPARISON_PROPERTY }}
+
+            - name: Handle Success
+              if: steps.run-rjip.outputs.status == 'success'
+              uses: ./.github/actions/handle-success
+              with:
+                  command_output: ${{ steps.run-rjip.outputs.command_output }}
                   item_json_file: ${{ env.ITEM_JSON_FILE }}
+
+            - name: Handle Error
+              if: steps.run-rjip.outputs.status == 'error'
+              uses: ./.github/actions/handle-error
+              with:
+                  command_output: ${{ steps.run-rjip.outputs.command_output }}
+                  last_picks_file: ${{ env.LAST_PICKS_FILE }}
+                  data_json_file: ${{ env.DATA_JSON_FILE }}
+                  UTIL_BINARY_PATH: ${{ env.UTIL_BINARY_PATH }}
+                  json_comparison_property: ${{ env.JSON_COMPARISON_PROPERTY }}
+
+            - name: Retry Util Command
+              if: steps.handle-error.outputs.status == 'retry'
+              uses: ./.github/actions/run-util-command
+              with:
+                  data_json_file: ${{ env.DATA_JSON_FILE }}
+                  last_picks_file: ${{ env.LAST_PICKS_FILE }}
+                  UTIL_BINARY_PATH: ${{ env.UTIL_BINARY_PATH }}
                   json_comparison_property: ${{ env.JSON_COMPARISON_PROPERTY }}
 
             - name: Commit changes
-              if: env.commit_changes == 'true'
+              if: steps.handle-success.outputs.commit_changes == 'true'
               run: |
                   echo "Committing changes..."
                   git config --global user.name 'github-actions[bot]'

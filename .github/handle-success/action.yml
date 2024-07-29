@@ -1,0 +1,29 @@
+name: Handle Success
+
+description: Handles the success case and saves the item.
+
+inputs:
+    command_output:
+        description: "The output from the rjip command"
+        required: true
+    item_json_file:
+        description: "The file to save the picked item"
+        required: true
+
+outputs:
+    commit_changes:
+        description: "Flag to indicate if changes need to be committed"
+
+runs:
+    using: "composite"
+    steps:
+        - run: |
+              #!/bin/bash
+              set -euxo pipefail
+
+              echo "Handling success..."
+              item=$(echo "${{ inputs.command_output }}" | jq '.item')
+              echo "$item" > ${{ inputs.item_json_file }}
+              echo "${{ inputs.item_json_file }} has been saved."
+              echo "::set-output name=commit_changes::true"
+          shell: bash
