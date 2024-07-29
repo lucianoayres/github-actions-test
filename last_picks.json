@@ -2,5 +2,9 @@
     {
         "ticker": "CASN",
         "name": "CASAN"
+    },
+    {
+        "ticker": "NEOE",
+        "name": "NEOENERGIA"
     }
 ]
