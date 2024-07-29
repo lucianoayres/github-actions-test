@@ -2,5 +2,9 @@
     {
         "ticker": "TCNO",
         "name": "TECNOSOLO"
+    },
+    {
+        "ticker": "AALR",
+        "name": "ALLIAR"
     }
 ]
