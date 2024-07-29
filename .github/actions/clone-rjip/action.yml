@@ -1,0 +1,14 @@
+name: Clone RJIP Repository
+
+description: Clones the rjip repository if not already present.
+
+runs:
+    using: "composite"
+    steps:
+        - run: |
+              if [ ! -d "rjip" ]; then
+                echo "Cloning rjip repository..."
+                git clone https://github.com/lucianoayres/rjip.git
+              else
+                echo "rjip directory already exists, skipping clone."
+              fi

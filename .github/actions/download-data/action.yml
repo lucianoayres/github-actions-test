@@ -1,0 +1,8 @@
+name: Download Data
+
+description: Downloads the data.json file.
+
+runs:
+    using: "composite"
+    steps:
+        - run: curl -o data.json https://raw.githubusercontent.com/lucianoayres/brazil-stocks-tickers-json/main/b3_stocks_tickers.json

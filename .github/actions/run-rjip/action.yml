@@ -1,0 +1,76 @@
+name: Run RJIP Command
+
+description: Runs the rjip command and handles the output.
+
+runs:
+    using: "composite"
+    steps:
+        - run: |
+              #!/bin/bash
+              set -euxo pipefail  # Enable strict error handling
+
+              run_rjip_command() {
+                echo "Running rjip command..."
+                cd rjip/dist
+                if [ ! -f "./rjip" ]; then
+                  echo "rjip binary not found!"
+                  exit 1
+                fi
+                command_output=$(./rjip ../../data.json ticker ../../last_picks.json || true)
+                echo "Command output: $command_output"
+                cd ../..
+                echo "$command_output" > command_output.json
+                status=$(echo "$command_output" | jq -r '.status')
+                echo "status=$status" >> $GITHUB_ENV
+                echo "command_output=$command_output" >> $GITHUB_ENV
+              }
+
+              handle_success() {
+                echo "Handling success..."
+                item=$(echo "$command_output" | jq '.item')
+                echo "$item" > item.json
+                echo "item.json has been saved."
+                echo "commit_changes=true" >> $GITHUB_ENV
+              }
+
+              handle_error() {
+                echo "Handling error..."
+                error_code=$(echo "$command_output" | jq -r '.error_code')
+                error_message=$(echo "$command_output" | jq -r '.message')
+                case "$error_code" in
+                    "invalid_or_nonexistent_json_file" | "empty_input_json_file" | "invalid_property_name" | "generic_error" | "")
+                        echo "Error: $error_message"
+                        exit 1
+                        ;;
+                    "all_items_picked")
+                        echo "Error: All items have been picked and no new items are available. Message: $error_message"
+                        if [ -f "last_picks.json" ]; then
+                            rm last_picks.json
+                            run_rjip_command
+                            if [ "$status" == "success" ]; then
+                                handle_success
+                            else
+                                echo "Retry failed with status: $status"
+                                exit 1
+                            fi
+                        else
+                            echo "last_picks.json not found in the root directory!"
+                            exit 1
+                        fi
+                        ;;
+                    *)
+                        echo "Error: An unknown error occurred. Message: $error_message"
+                        exit 1
+                        ;;
+                esac
+              }
+
+              run_rjip_command
+              if [ "$status" == "success" ]; then
+                handle_success
+              elif [ "$status" == "error" ]; then
+                handle_error
+              else
+                echo "Unknown status: $status"
+                exit 1
+              fi
