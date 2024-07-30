@@ -14,5 +14,9 @@
     {
         "ticker": "SAPR",
         "name": "SANEPAR"
+    },
+    {
+        "ticker": "RDNI",
+        "name": "RNI"
     }
 ]
