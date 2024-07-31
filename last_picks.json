@@ -18,5 +18,9 @@
     {
         "ticker": "RDNI",
         "name": "RNI"
+    },
+    {
+        "ticker": "MTSA",
+        "name": "METISA"
     }
 ]
