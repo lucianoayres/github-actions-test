@@ -1,8 +1,8 @@
 name: rjip Test Workflow
 
 on:
-    schedule:
-        - cron: "27 2 * * *" # Run every day at 2:27 AM UTC
+    issue_comment:
+        types: [created]
 
 permissions:
     contents: write # Allow workflow to push changes

@@ -1,6 +1,6 @@
 name: Store Data
 
-description: Runs the rJip CLI to pick a random item from the JSON, save it and handles the output.
+description: Runs the rJip CLI to pick a random item from the JSON, save it, and handle the output.
 
 inputs:
     data_json_file:
@@ -26,24 +26,31 @@ runs:
               #!/bin/bash
               set -euxo pipefail  # Enable strict error handling
 
-              run_util_command() {
-                echo "Running util command..."
-                cd $(dirname ${{ inputs.UTIL_BINARY_PATH }})
+              check_binary_exists() {
                 if [ ! -f "./$(basename ${{ inputs.UTIL_BINARY_PATH }})" ]; then
-                  echo "binary not found!"
+                  echo "Binary not found!"
                   exit 1
                 fi
+              }
+
+              execute_util_command() {
+                cd $(dirname ${{ inputs.UTIL_BINARY_PATH }})
+                check_binary_exists
                 command_output=$(./$(basename ${{ inputs.UTIL_BINARY_PATH }}) ../../${{ inputs.data_json_file }} ${{ inputs.json_comparison_property }} ../../${{ inputs.last_picks_file }} || true)
-                echo "Command output: $command_output"
                 cd ../..
                 echo "$command_output" > command_output.json
-                status=$(echo "$command_output" | jq -r '.status')
+                echo "$command_output"
+              }
+
+              save_environment_variables() {
+                local status="$1"
+                local command_output="$2"
                 echo "status=$status" >> $GITHUB_ENV
                 echo "command_output=$command_output" >> $GITHUB_ENV
               }
 
               handle_success() {
-                echo "Handling success..."
+                local command_output="$1"
                 item=$(echo "$command_output" | jq '.item')
                 echo "$item" > ${{ inputs.item_json_file }}
                 echo "${{ inputs.item_json_file }} has been saved."
@@ -51,7 +58,7 @@ runs:
               }
 
               handle_error() {
-                echo "Handling error..."
+                local command_output="$1"
                 error_code=$(echo "$command_output" | jq -r '.error_code')
                 error_message=$(echo "$command_output" | jq -r '.message')
                 case "$error_code" in
@@ -63,13 +70,7 @@ runs:
                         echo "Error: All items have been picked and no new items are available. Message: $error_message"
                         if [ -f "${{ inputs.last_picks_file }}" ]; then
                             rm ${{ inputs.last_picks_file }}
-                            run_util_command
-                            if [ "$status" == "success" ]; then
-                                handle_success
-                            else
-                                echo "Retry failed with status: $status"
-                                exit 1
-                            fi
+                            rerun_command
                         else
                             echo "${{ inputs.last_picks_file }} not found in the root directory!"
                             exit 1
@@ -82,13 +83,32 @@ runs:
                 esac
               }
 
-              run_util_command
-              if [ "$status" == "success" ]; then
-                handle_success
-              elif [ "$status" == "error" ]; then
-                handle_error
-              else
-                echo "Unknown status: $status"
-                exit 1
-              fi
+              rerun_command() {
+                command_output=$(execute_util_command)
+                status=$(echo "$command_output" | jq -r '.status')
+                save_environment_variables "$status" "$command_output"
+                if [ "$status" == "success" ]; then
+                  handle_success "$command_output"
+                else
+                  echo "Retry failed with status: $status"
+                  exit 1
+                fi
+              }
+
+              main() {
+                command_output=$(execute_util_command)
+                status=$(echo "$command_output" | jq -r '.status')
+                save_environment_variables "$status" "$command_output"
+
+                if [ "$status" == "success" ]; then
+                  handle_success "$command_output"
+                elif [ "$status" == "error" ]; then
+                  handle_error "$command_output"
+                else
+                  echo "Unknown status: $status"
+                  exit 1
+                fi
+              }
+
+              main
           shell: bash
