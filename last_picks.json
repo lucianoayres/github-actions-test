@@ -1578,5 +1578,9 @@
     {
         "ticker": "ZAMP",
         "name": "ZAMP S.A."
+    },
+    {
+        "ticker": "CIEL",
+        "name": "CIELO"
     }
 ]
