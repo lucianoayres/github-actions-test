@@ -1,0 +1,16 @@
+name: Install Ollama
+
+on:
+    workflow_dispatch: # Allows running this workflow manually from the Actions tab
+
+permissions:
+    contents: read
+
+jobs:
+    install_ollama:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Install Ollama
+              run: |
+                  curl -fsSL https://ollama.com/install.sh | sh
