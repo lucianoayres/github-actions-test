@@ -1,16 +1,32 @@
-name: Install Ollama
+name: Install and Run Ollama
 
 on:
+    schedule:
+        - cron: "43 2 * * *" # Run every day at 2:43 AM UTC
     workflow_dispatch: # Allows running this workflow manually from the Actions tab
 
 permissions:
     contents: read
 
 jobs:
-    install_ollama:
+    run_ollama:
         runs-on: ubuntu-latest
 
         steps:
             - name: Install Ollama
               run: |
                   curl -fsSL https://ollama.com/install.sh | sh
+
+            - name: Run Ollama server in the background
+              run: |
+                  nohup ./ollama serve &
+
+            - name: Wait for Ollama server to start
+              run: sleep 10
+
+            - name: Generate response from Ollama
+              run: |
+                  curl http://localhost:11434/api/generate -d '{
+                    "model": "llama3.1",
+                    "prompt":"Why is the sky blue? Respond with a very short answer."
+                  }'
