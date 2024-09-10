@@ -19,7 +19,7 @@ jobs:
 
             - name: Run Ollama server in the background
               run: |
-                  nohup ./ollama serve &
+                  nohup ollama serve &
 
             - name: Wait for Ollama server to start
               run: sleep 10
