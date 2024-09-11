@@ -18,27 +18,40 @@ jobs:
               run: |
                   curl -fsSL https://ollama.com/install.sh | sh
 
+            - name: Save Ollama version
+              run: |
+                  ollama --version > ollama_version.txt
+
             - name: Run Ollama server in the background
               run: |
                   nohup ollama serve & # Start Ollama server in the background
                   sleep 10 # Give it some time to start
 
+            - name: Run llama model
+              run: |
+                  ollama run llama3.1
+
             - name: Install Go
               run: |
                   sudo apt update
                   sudo apt install -y golang-go
-                  
+
+            - name: Build Go script
+              run: |
+                  go build -o query-ollama query-ollama.go
+
             - name: Make Go script executable
               run: |
                   chmod +x query-ollama
-                  
+
             - name: Verify file permissions
               run: |
                   ls -la query-ollama
-                  
+
             - name: Run Go script
               run: |
-                  echo "Running query-ollama..."
-                  ./query-ollama | tee output.txt
-                  echo "Script completed. Checking output..."
-                  cat output.txt
+                  ./query-ollama
+
+            - name: Wait for 30 seconds
+              run: |
+                  sleep 30
