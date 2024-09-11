@@ -31,7 +31,7 @@ jobs:
 
             - name: Build Go script
               run: |
-                  cat <<EOF > generate_response.go
+                  cat <<'EOF' > generate_response.go
 package main
 
 import (
