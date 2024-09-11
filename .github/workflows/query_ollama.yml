@@ -24,19 +24,14 @@ jobs:
                   nohup ollama serve & # Start Ollama server in the background
                   sleep 10 # Give it some time to start
 
+            - name: Run llama model
+              run: |
+                  ollama run llama3.1
+
             - name: Install Go
               run: |
                   sudo apt update
                   sudo apt install -y golang-go
-
-            - name: Set up Go module
-              run: |
-                  go mod init example.com/mymodule || true # Skip if already initialized
-                  go mod tidy
-
-            - name: Build Go script
-              run: |
-                  go build -o query-ollama query-ollama.go
 
             - name: Run Go script
               run: |
