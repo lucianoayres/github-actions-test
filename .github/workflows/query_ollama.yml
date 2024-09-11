@@ -38,4 +38,7 @@ jobs:
                   
             - name: Run Go script
               run: |
+                  echo "Running query-ollama..."
                   ./query-ollama | tee output.txt
+                  echo "Script completed. Checking output..."
+                  cat output.txt
