@@ -38,4 +38,4 @@ jobs:
                   
             - name: Run Go script
               run: |
-                  ./query-ollama
+                  ./query-ollama | tee output.txt
