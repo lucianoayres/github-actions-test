@@ -14,10 +14,6 @@ jobs:
             - name: Install Ollama
               run: |
                   curl -fsSL https://ollama.com/install.sh | sh
-              
-            - name: Save Ollama version
-              run: |
-                  ollama --version > ollama_version.txt
 
             - name: Run Ollama server in the background
               run: |
@@ -32,6 +28,11 @@ jobs:
               run: |
                   sudo apt update
                   sudo apt install -y golang-go
+
+            - name: Make Go script executable
+              run: |
+                  chmod +x query-ollama # Ensure the file is executable
+                  ls -l query-ollama # List the file to verify permissions
 
             - name: Run Go script
               run: |
