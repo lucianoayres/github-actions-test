@@ -20,10 +20,6 @@ jobs:
                   nohup ollama serve & # Start Ollama server in the background
                   sleep 10 # Give it some time to start
 
-            - name: Run llama model
-              run: |
-                  ollama run llama3.1
-
             - name: Install Go
               run: |
                   sudo apt update
@@ -31,7 +27,6 @@ jobs:
 
             - name: Make Go script executable
               run: |
-                  chmod +x query-ollama # Ensure the file is executable
                   ls -l query-ollama # List the file to verify permissions
 
             - name: Run Go script
