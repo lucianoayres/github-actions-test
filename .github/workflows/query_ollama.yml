@@ -17,6 +17,8 @@ jobs:
                 # Cache Ollama binary and models directory
                 path: |
                   /usr/local/bin/ollama
+                  /usr/share/ollama
+                  /usr/share/ollama/.ollama/models
                   ~/.ollama/models
                 key: ollama-cache-${{ runner.os }}-${{ hashFiles('ollama_version.txt') }}
                 restore-keys: |
