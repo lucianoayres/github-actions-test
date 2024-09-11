@@ -11,9 +11,25 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - name: Install Ollama
+            - name: Cache Ollama installation and model files
+              uses: actions/cache@v4
+              with:
+                # Cache Ollama binary and models directory
+                path: |
+                  /usr/local/bin/ollama
+                  ~/.ollama/models
+                key: ollama-cache-${{ runner.os }}-${{ hashFiles('ollama_version.txt') }}
+                restore-keys: |
+                  ollama-cache-${{ runner.os }}-
+
+            - name: Install Ollama (if not cached)
+              if: steps.cache.outputs.cache-hit != 'true'
               run: |
                   curl -fsSL https://ollama.com/install.sh | sh
+              
+            - name: Save Ollama version
+              run: |
+                  ollama --version > ollama_version.txt
 
             - name: Run Ollama server in the background
               run: |
