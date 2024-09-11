@@ -13,7 +13,7 @@ jobs:
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
-            
+
             - name: Install Ollama
               run: |
                   curl -fsSL https://ollama.com/install.sh | sh
@@ -28,9 +28,17 @@ jobs:
                   sudo apt update
                   sudo apt install -y golang-go
 
+            - name: Build Go script
+              run: |
+                  go build -o query-ollama query-ollama.go
+                  
             - name: Make Go script executable
               run: |
-                  ls -la
+                  chmod +x query-ollama
+                  
+            - name: Verify file permissions
+              run: |
+                  ls -la query-ollama
                   
             - name: Run Go script
               run: |
