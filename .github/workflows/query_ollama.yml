@@ -1,53 +1,91 @@
 name: Install and Run Ollama
 
 on:
-    workflow_dispatch: # Allows running this workflow manually from the Actions tab
+  workflow_dispatch: # Allows running this workflow manually from the Actions tab
 
 permissions:
-    contents: read
+  contents: read
 
 jobs:
-    run_ollama:
-        runs-on: ubuntu-latest
+  run_ollama:
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-            - name: Install Ollama
-              run: |
-                  curl -fsSL https://ollama.com/install.sh | sh
+      # Cache the Ollama binary
+      - name: Cache Ollama installation
+        uses: actions/cache@v3
+        id: ollama-cache
+        with:
+          path: /usr/local/bin/ollama
+          key: ${{ runner.os }}-ollama-${{ hashFiles('ollama_version.txt') }}
 
-            - name: Save Ollama version
-              run: |
-                  ollama --version > ollama_version.txt
+      # Install Ollama if not cached
+      - name: Install Ollama
+        if: steps.ollama-cache.outputs.cache-hit != 'true'
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          ollama --version > ollama_version.txt
 
-            - name: Run Ollama server in the background
-              run: |
-                  nohup ollama serve & # Start Ollama server in the background
-                  sleep 10 # Give it some time to start
+      - name: Save Ollama version
+        run: |
+          ollama --version > ollama_version.txt
 
-            - name: Run llama model
-              run: |
-                  ollama run llama3.1
+      # Cache Go modules
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
-            - name: Install Go
-              run: |
-                  sudo apt update
-                  sudo apt install -y golang-go
+      # Install Go
+      - name: Install Go
+        run: |
+          sudo apt update
+          sudo apt install -y golang-go
 
-            - name: Build Go script
-              run: |
-                  go build -o query-ollama query-ollama.go
+      # Cache the built Go script (query-ollama)
+      - name: Cache Go build
+        uses: actions/cache@v3
+        id: go-build-cache
+        with:
+          path: query-ollama
+          key: ${{ runner.os }}-go-build-${{ hashFiles('query-ollama.go') }}
 
-            - name: Make Go script executable
-              run: |
-                  chmod +x query-ollama
+      # Build Go script if not cached
+      - name: Build Go script
+        if: steps.go-build-cache.outputs.cache-hit != 'true'
+        run: |
+          go build -o query-ollama query-ollama.go
 
-            - name: Verify file permissions
-              run: |
-                  ls -la query-ollama
+      # Make Go script executable
+      - name: Make Go script executable
+        run: |
+          chmod +x query-ollama
 
-            - name: Run Go script
-              run: |
-                  ./query-ollama
+      # Verify file permissions
+      - name: Verify file permissions
+        run: |
+          ls -la query-ollama
+
+      # Run Ollama server in the background
+      - name: Run Ollama server in the background
+        run: |
+          nohup ollama serve & # Start Ollama server in the background
+          sleep 10 # Give it some time to start
+
+      # Run llama model
+      - name: Run llama model
+        run: |
+          ollama run llama3.1
+
+      # Run Go script
+      - name: Run Go script
+        run: |
+          ./query-ollama
