@@ -29,9 +29,14 @@ jobs:
                   sudo apt update
                   sudo apt install -y golang-go
 
+            - name: Set up Go module
+              run: |
+                  go mod init example.com/mymodule || true # Skip if already initialized
+                  go mod tidy
+
             - name: Build Go script
               run: |
-                  go build query-ollama.go
+                  go build -o query-ollama query-ollama.go
 
             - name: Run Go script
               run: |
