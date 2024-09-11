@@ -10,6 +10,7 @@ jobs:
     # Stage 1: Checkout and install dependencies
     install_dependencies:
         runs-on: ubuntu-latest
+
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
@@ -23,16 +24,46 @@ jobs:
                   sudo apt update
                   sudo apt install -y golang-go
 
-    # Stage 2: Save Ollama version and start the server
+            - name: Cache Go modules
+              uses: actions/cache@v3
+              with:
+                path: /home/runner/go
+                key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
+                restore-keys: |
+                  ${{ runner.os }}-go-
+
+            - name: Save Ollama installation
+              run: |
+                  tar -cvf ollama.tar.gz /usr/local/bin/ollama
+              continue-on-error: true
+
+            - name: Upload Ollama and Go artifacts
+              uses: actions/upload-artifact@v3
+              with:
+                  name: ollama-and-go
+                  path: |
+                    ollama.tar.gz
+                    /home/runner/go
+
+    # Stage 2: Setup Ollama and start server
     setup_ollama:
         runs-on: ubuntu-latest
         needs: install_dependencies # Depends on the previous job
-        steps:
-            - name: Save Ollama version
-              run: |
-                  ollama --version > ollama_version.txt
 
-            - name: Run Ollama server in the background
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Download Ollama and Go artifacts
+              uses: actions/download-artifact@v3
+              with:
+                  name: ollama-and-go
+
+            - name: Restore Ollama installation
+              run: |
+                  tar -xvf ollama.tar.gz -C /
+
+            - name: Start Ollama server
               run: |
                   nohup ollama serve & # Start Ollama server in the background
                   sleep 10 # Give it some time to start
@@ -41,7 +72,20 @@ jobs:
     run_ollama:
         runs-on: ubuntu-latest
         needs: setup_ollama # Depends on the previous job
+
         steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Download Ollama and Go artifacts
+              uses: actions/download-artifact@v3
+              with:
+                  name: ollama-and-go
+
+            - name: Restore Ollama installation
+              run: |
+                  tar -xvf ollama.tar.gz -C /
+
             - name: Run llama model
               run: |
                   ollama run llama3.1
@@ -50,7 +94,20 @@ jobs:
     build_go_script:
         runs-on: ubuntu-latest
         needs: run_ollama # Depends on the previous job
+
         steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Download Ollama and Go artifacts
+              uses: actions/download-artifact@v3
+              with:
+                  name: ollama-and-go
+
+            - name: Restore Ollama installation
+              run: |
+                  tar -xvf ollama.tar.gz -C /
+
             - name: Build Go script
               run: |
                   go build -o query-ollama query-ollama.go
@@ -59,7 +116,20 @@ jobs:
     finalize_and_run:
         runs-on: ubuntu-latest
         needs: build_go_script # Depends on the previous job
+
         steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Download Ollama and Go artifacts
+              uses: actions/download-artifact@v3
+              with:
+                  name: ollama-and-go
+
+            - name: Restore Ollama installation
+              run: |
+                  tar -xvf ollama.tar.gz -C /
+
             - name: Make Go script executable
               run: |
                   chmod +x query-ollama
