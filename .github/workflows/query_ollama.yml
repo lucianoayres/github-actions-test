@@ -31,7 +31,8 @@ jobs:
 
             - name: Build Go script
               run: |
-                  echo 'package main
+                  cat <<EOF > generate_response.go
+package main
 
 import (
 	"bytes"
@@ -92,7 +93,8 @@ func main() {
 			break
 		}
 	}
-}' > generate_response.go
+}
+EOF
                   go build generate_response.go
 
             - name: Run Go script
