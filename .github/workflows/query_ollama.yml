@@ -11,21 +11,7 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - name: Cache Ollama installation and model files
-              uses: actions/cache@v4
-              with:
-                # Cache Ollama binary and models directory
-                path: |
-                  /usr/local/bin/ollama
-                  /usr/share/ollama
-                  /usr/share/ollama/.ollama/models
-                  ~/.ollama/models
-                key: ollama-cache-${{ runner.os }}-${{ hashFiles('ollama_version.txt') }}
-                restore-keys: |
-                  ollama-cache-${{ runner.os }}-
-
-            - name: Install Ollama (if not cached)
-              if: steps.cache.outputs.cache-hit != 'true'
+            - name: Install Ollama
               run: |
                   curl -fsSL https://ollama.com/install.sh | sh
               
@@ -38,13 +24,77 @@ jobs:
                   nohup ollama serve & # Start Ollama server in the background
                   sleep 10 # Give it some time to start
 
-            - name: Run llama model
+            - name: Install Go
               run: |
-                  ollama run llama3.1
+                  sudo apt update
+                  sudo apt install -y golang-go
 
-            - name: Generate response from Ollama
+            - name: Build Go script
               run: |
-                  curl http://localhost:11434/api/generate -d '{
-                    "model": "llama3.1",
-                    "prompt":"Why is the sky blue? Respond with a very short answer."
-                  }'
+                  echo 'package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+)
+
+type Response struct {
+	Model     string `json:"model"`
+	CreatedAt string `json:"created_at"`
+	Response  string `json:"response"`
+	Done      bool   `json:"done"`
+}
+
+func main() {
+	url := "http://localhost:11434/api/generate"
+	data := ` + "`" + `{
+		"model": "llama3.1",
+		"prompt": "Why is the sky blue? I want you to give a really short answer!"
+	}` + "`" + `
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(data)))
+	if err != nil {
+		fmt.Println("Error creating request:", err)
+		os.Exit(1)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	// HTTP client with no timeout
+	client := &http.Client{
+		Timeout: 0, // No timeout
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error sending request:", err)
+		os.Exit(1)
+	}
+	defer resp.Body.Close()
+
+	decoder := json.NewDecoder(resp.Body)
+
+	for {
+		var r Response
+		if err := decoder.Decode(&r); err == io.EOF {
+			break
+		} else if err != nil {
+			fmt.Println("Error decoding response:", err)
+			break
+		}
+
+		fmt.Print(r.Response)
+
+		if r.Done {
+			break
+		}
+	}
+}' > generate_response.go
+                  go build generate_response.go
+
+            - name: Run Go script
+              run: |
+                  ./generate_response
