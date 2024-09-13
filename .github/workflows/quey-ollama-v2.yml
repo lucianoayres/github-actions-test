@@ -18,11 +18,10 @@ jobs:
       - name: Install Ollama
         run: |
           curl -fsSL https://ollama.com/install.sh | sh
-          ollama --version > ollama_version.txt
 
-      - name: Save Ollama version
+      - name: Check Ollama installation
         run: |
-          ollama --version > ollama_version.txt
+          which ollama
 
       # Set up Go environment
       - name: Set up Go
