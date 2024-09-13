@@ -1,4 +1,4 @@
-name: Install and Run Ollama v2
+name: Install and Run Ollama
 
 on:
   workflow_dispatch: # Allows running this workflow manually from the Actions tab
@@ -14,14 +14,25 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Install Ollama
+      # Cache the Ollama binary directory
+      - name: Cache Ollama binary
+        id: ollama-cache
+        uses: actions/cache@v3
+        with:
+          path: /usr/local/bin/ollama
+          key: ${{ runner.os }}-ollama-${{ hashFiles('ollama_version.txt') }}
+
+      # Install Ollama if not cached
       - name: Install Ollama
+        if: steps.ollama-cache.outputs.cache-hit != 'true'
         run: |
           curl -fsSL https://ollama.com/install.sh | sh
+          ollama --version > ollama_version.txt
 
-      - name: Check Ollama installation
+      # Save Ollama version
+      - name: Save Ollama version
         run: |
-          which ollama
+          ollama --version > ollama_version.txt
 
       # Set up Go environment
       - name: Set up Go
