@@ -1,4 +1,4 @@
-name: Install and Run Ollama
+name: Install and Run Ollama v2
 
 on:
   workflow_dispatch: # Allows running this workflow manually from the Actions tab
