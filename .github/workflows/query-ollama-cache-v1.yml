@@ -14,14 +14,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Cache the Ollama binary and version
-      - name: Cache Ollama binary and version
-        id: ollama-cache
-        uses: actions/cache@v3
-        with:
-          path: /usr/local/bin/ollama
-          key: ${{ runner.os }}-ollama-${{ steps.get-ollama-version.outputs.version }}
-
       # Get Ollama version
       - name: Get Ollama version
         id: get-ollama-version
@@ -29,11 +21,20 @@ jobs:
           if command -v ollama &> /dev/null; then
             ollama_version=$(ollama --version)
             echo "Ollama version: $ollama_version"
+            echo "version=$ollama_version" >> $GITHUB_ENV
           else
             ollama_version="none"
             echo "No Ollama installed"
+            echo "version=$ollama_version" >> $GITHUB_ENV
           fi
-          echo "::set-output name=version::$ollama_version"
+
+      # Cache the Ollama binary and version
+      - name: Cache Ollama binary and version
+        id: ollama-cache
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/bin/ollama
+          key: ${{ runner.os }}-ollama-version-${{ env.version }}
 
       # Install Ollama if not cached
       - name: Install Ollama
