@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false  # Required for pushing commits manually
+
+      # Step 2: Set up Git configuration
+      - name: Set up Git
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Step 3: Determine latest Ollama version
+      - name: Determine latest Ollama version
+        id: get_version
+        run: |
+          # Replace with the actual method to fetch the latest Ollama version
+          VERSION=$(curl -s https://api.ollama.com/latest-version)
+
+          # Validate that VERSION was fetched successfully
+          if [ -z "$VERSION" ]; then
+            echo "Error: Failed to fetch Ollama version."
+            exit 1
+          fi
+
+          echo "Ollama Version: $VERSION"
+
+          # Save the version as an environment variable
+          echo "OLLAMA_VERSION=$VERSION" >> $GITHUB_ENV
+
+          # Set the version as an output for use in other steps
+          echo "::set-output name=version::$VERSION"
+
+      # Step 4: Cache the Ollama binary
+      - name: Cache Ollama binary
+        id: ollama-cache
+        uses: actions/cache@v3
+        with:
+          path: /usr/local/bin/ollama
+          key: ${{ runner.os }}-ollama-${{ steps.get_version.outputs.version }}
+          restore-keys: |
+            ${{ runner.os }}-ollama-
+
+      # Step 5: Install Ollama if cache miss
+      - name: Install Ollama
+        if: steps.ollama-cache.outputs.cache-hit != 'true'
+        run: |
+          echo "Cache miss: Installing Ollama version $OLLAMA_VERSION..."
+          curl -fsSL https://ollama.com/install.sh | sh
+
+      # Step 6: Save the installed Ollama version
+      - name: Save Ollama version
+        if: steps.ollama-cache.outputs.cache-hit != 'true'
+        run: |
+          ollama --version > ollama_version.txt
+
+      # Step 7: Commit and push the updated version file
+      - name: Commit updated Ollama version
+        if: steps.ollama-cache.outputs.cache-hit != 'true'
+        run: |
+          echo "Committing changes..."
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          # Stage the ollama_version.txt file
+          git add ollama_version.txt
+          
+          # Commit the changes with a meaningful message
+          git commit -m "Update Ollama version to ${{ steps.get_version.outputs.version }}"
+          
+          # Push the changes back to the repository
+          git push
+
+      # Step 8: Build your project
+      - name: Build
+        run: make build
+
+      # Step 9: Test your project
+      - name: Test
+        run: make test
