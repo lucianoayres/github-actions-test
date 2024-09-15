@@ -14,7 +14,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Cache the Ollama binary with a general key before knowing the version
+      # Cache the Ollama binary with a general key before knowing the binary hash
       - name: Cache Ollama binary
         id: ollama-cache
         uses: actions/cache@v4
@@ -29,18 +29,20 @@ jobs:
         run: |
           curl -fsSL https://ollama.com/install.sh | sh
 
-      # Get Ollama version after installation
-      - name: Get Ollama version
-        id: get-ollama-version
+      # Generate hash of the Ollama binary after installation
+      - name: Generate Ollama binary hash
+        id: ollama-hash
         run: |
-          ollama_version=$(ollama --version 2>&1 | grep -oP '(?<=version )[\d.]+')
-          echo "Ollama version: $ollama_version"
-          echo "version=$ollama_version" >> $GITHUB_ENV
+          ollama_binary_hash=$(sha256sum /usr/local/bin/ollama | awk '{ print $1 }')
+          echo "Ollama binary hash: $ollama_binary_hash"
+          echo "ollama_binary_hash=$ollama_binary_hash" >> $GITHUB_ENV
 
-      # Re-cache the Ollama binary and version (now we know the version)
-      - name: Update Ollama cache with version
+      # Re-cache the Ollama binary using the binary hash
+      - name: Update Ollama cache with binary hash
         uses: actions/cache@v4
         with:
           path: /usr/local/bin/ollama
-          key: ${{ runner.os }}-ollama-${{ env.version }}
-          restore-keys: ${{ runner.os }}-ollama-
+          key: ${{ runner.os }}-ollama-${{ env.ollama_binary_hash }}
+          restore-keys: |
+            ${{ runner.os }}-ollama-
+            ${{ runner.os }}-ollama
