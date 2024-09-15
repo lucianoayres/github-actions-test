@@ -21,20 +21,17 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # Step 3: Determine latest Ollama version
-      - name: Determine latest Ollama version
-        id: get_version
+      # Step 3: Load the cached Ollama version (if exists)
+      - name: Load cached Ollama version
+        id: load_version
         run: |
-          # Replace with the actual method to fetch the latest Ollama version
-          VERSION=$(curl -s https://api.ollama.com/latest-version)
-
-          # Validate that VERSION was fetched successfully
-          if [ -z "$VERSION" ]; then
-            echo "Error: Failed to fetch Ollama version."
-            exit 1
+          if [ -f ollama_version.txt ]; then
+            VERSION=$(cat ollama_version.txt)
+            echo "Cached Ollama version found: $VERSION"
+          else
+            VERSION="unknown"
+            echo "No cached Ollama version found"
           fi
-
-          echo "Ollama Version: $VERSION"
 
           # Save the version as an environment variable
           echo "OLLAMA_VERSION=$VERSION" >> $GITHUB_ENV
@@ -42,32 +39,71 @@ jobs:
           # Set the version as an output for use in other steps
           echo "::set-output name=version::$VERSION"
 
-      # Step 4: Cache the Ollama binary
+      # Step 4: Cache the Ollama binary using the cached version
       - name: Cache Ollama binary
         id: ollama-cache
         uses: actions/cache@v3
         with:
           path: /usr/local/bin/ollama
-          key: ${{ runner.os }}-ollama-${{ steps.get_version.outputs.version }}
+          key: ${{ runner.os }}-ollama-${{ steps.load_version.outputs.version }}
           restore-keys: |
             ${{ runner.os }}-ollama-
 
-      # Step 5: Install Ollama if cache miss
+      # Step 5: Install Ollama if cache miss or version is unknown
       - name: Install Ollama
-        if: steps.ollama-cache.outputs.cache-hit != 'true'
+        if: steps.ollama-cache.outputs.cache-hit != 'true' || env.OLLAMA_VERSION == 'unknown'
         run: |
-          echo "Cache miss: Installing Ollama version $OLLAMA_VERSION..."
+          echo "Cache miss or unknown version: Installing Ollama..."
           curl -fsSL https://ollama.com/install.sh | sh
+          ollama --version > ollama_version.txt
+          echo "Installed Ollama version $(cat ollama_version.txt)"
 
-      # Step 6: Save the installed Ollama version
+      # Step 6: Save the installed Ollama version if new version installed
       - name: Save Ollama version
-        if: steps.ollama-cache.outputs.cache-hit != 'true'
+        if: steps.ollama-cache.outputs.cache-hit != 'true' || env.OLLAMA_VERSION == 'unknown'
         run: |
           ollama --version > ollama_version.txt
 
-      # Step 7: Commit and push the updated version file
+      # Step 7: Set up Go environment
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20' # Adjust the version as needed
+
+      # Step 8: Build Go script
+      - name: Build Go script
+        run: |
+          go build -o query-ollama query-ollama.go
+
+      # Step 9: Make Go script executable
+      - name: Make Go script executable
+        run: |
+          chmod +x query-ollama
+
+      # Step 10: Verify file permissions
+      - name: Verify file permissions
+        run: |
+          ls -la query-ollama
+
+      # Step 11: Run Ollama server in the background
+      - name: Run Ollama server in the background
+        run: |
+          nohup ollama serve & # Start Ollama server in the background
+          sleep 10 # Give it some time to start
+
+      # Step 12: Run Ollama model (Llama model)
+      - name: Run llama model
+        run: |
+          ollama run llama3.1
+
+      # Step 13: Run Go script
+      - name: Run Go script
+        run: |
+          ./query-ollama
+
+      # Step 14: Commit the updated version file if new version installed
       - name: Commit updated Ollama version
-        if: steps.ollama-cache.outputs.cache-hit != 'true'
+        if: steps.ollama-cache.outputs.cache-hit != 'true' || env.OLLAMA_VERSION == 'unknown'
         run: |
           echo "Committing changes..."
           git config --global user.name 'github-actions[bot]'
@@ -77,15 +113,7 @@ jobs:
           git add ollama_version.txt
           
           # Commit the changes with a meaningful message
-          git commit -m "Update Ollama version to ${{ steps.get_version.outputs.version }}"
+          git commit -m "Update Ollama version to $(cat ollama_version.txt)"
           
           # Push the changes back to the repository
           git push
-
-      # Step 8: Build your project
-      - name: Build
-        run: make build
-
-      # Step 9: Test your project
-      - name: Test
-        run: make test
