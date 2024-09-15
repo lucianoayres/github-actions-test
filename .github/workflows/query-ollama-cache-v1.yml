@@ -1,0 +1,42 @@
+name: Install and Run Ollama v2
+
+on:
+  workflow_dispatch: # Allows running this workflow manually from the Actions tab
+
+permissions:
+  contents: read
+
+jobs:
+  run_ollama:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Cache the Ollama binary and version
+      - name: Cache Ollama binary and version
+        id: ollama-cache
+        uses: actions/cache@v3
+        with:
+          path: /usr/local/bin/ollama
+          key: ${{ runner.os }}-ollama-${{ steps.get-ollama-version.outputs.version }}
+
+      # Get Ollama version
+      - name: Get Ollama version
+        id: get-ollama-version
+        run: |
+          if command -v ollama &> /dev/null; then
+            ollama_version=$(ollama --version)
+            echo "Ollama version: $ollama_version"
+          else
+            ollama_version="none"
+            echo "No Ollama installed"
+          fi
+          echo "::set-output name=version::$ollama_version"
+
+      # Install Ollama if not cached
+      - name: Install Ollama
+        if: steps.ollama-cache.outputs.cache-hit != 'true'
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
