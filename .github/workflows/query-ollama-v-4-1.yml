@@ -7,6 +7,10 @@ on:
         description: 'The model to run with Ollama (e.g., llama3.1)'
         required: true
         default: 'llama3.1'
+      prompt:
+        description: 'The prompt to query the model'
+        required: true
+        default: 'Hello world!'
 
 permissions:
   contents: read
@@ -49,7 +53,7 @@ jobs:
       # Make Go script executable
       - name: Make Go script executable
         run: |
-          chmod +x query-ollama
+          chmod +x query-ollama ${{ github.event.inputs.prompt }}
 
       # Run Go script
       - name: Run Go script
