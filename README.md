@@ -1,4 +1,4 @@
-Triggering the Workflow via REST API:
+# Triggering the Workflow via REST API
 You can trigger the workflow with a REST API call as follows:
 
 ```bash
