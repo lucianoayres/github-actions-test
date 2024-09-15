@@ -33,7 +33,7 @@ jobs:
       - name: Get Ollama version
         id: get-ollama-version
         run: |
-          ollama_version=$(ollama --version)
+          ollama_version=$(ollama --version 2>&1 | grep -oP '(?<=version )[\d.]+')
           echo "Ollama version: $ollama_version"
           echo "version=$ollama_version" >> $GITHUB_ENV
 
