@@ -53,9 +53,9 @@ jobs:
       # Make Go script executable
       - name: Make Go script executable
         run: |
-          chmod +x query-ollama ${{ github.event.inputs.prompt }}
+          chmod +x query-ollama
 
       # Run Go script
       - name: Run Go script
         run: |
-          ./query-ollama
+          ./query-ollama -model ${{ github.event.inputs.model }} -prompt ${{ github.event.inputs.prompt }}
