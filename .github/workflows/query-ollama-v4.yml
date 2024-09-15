@@ -19,7 +19,18 @@ jobs:
         run: |
           curl -fsSL https://ollama.com/install.sh | sh
 
-      # Set up Go environment
+      # Run Ollama server in the background
+      - name: Run Ollama server in the background
+        run: |
+          nohup ollama serve & # Start Ollama server in the background
+          sleep 10 # Give it some time to start
+
+      # Run llama model
+      - name: Run llama model
+        run: |
+          ollama run llama3.1
+
+       # Set up Go environment
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
@@ -34,22 +45,6 @@ jobs:
       - name: Make Go script executable
         run: |
           chmod +x query-ollama
-
-      # Verify file permissions
-      - name: Verify file permissions
-        run: |
-          ls -la query-ollama
-
-      # Run Ollama server in the background
-      - name: Run Ollama server in the background
-        run: |
-          nohup ollama serve & # Start Ollama server in the background
-          sleep 10 # Give it some time to start
-
-      # Run llama model
-      - name: Run llama model
-        run: |
-          ollama run llama3.1
 
       # Run Go script
       - name: Run Go script
