@@ -25,5 +25,5 @@ jobs:
       - env:
           OUTPUT1: ${{needs.first_job.outputs.output1}}
           OUTPUT2: ${{needs.first_job.outputs.output2}}
-        run: echo "::warning $OUTPUT1 $OUTPUT2"
+        run: echo "::notice::$OUTPUT1 $OUTPUT2"
     
