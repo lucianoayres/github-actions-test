@@ -6,32 +6,27 @@ on:
 
 defaults:
   run:
-    working-directory: ./test
+    shell: bash
 
 jobs:
   first_job:
     runs-on: ubuntu-latest
     defaults:
       run:
-        shell: bash
-        working-directory: ./scripts
+        shell: python
     steps:
       - id: step1
-        run: pwd
+        run: print("Hello World!")
 
   second_job:
     runs-on: ubuntu-latest
     steps:
       - id: step1
-        run: pwd
+        run: |
+          pwd
+          ls -la
 
   third_job:
     uses: ./.github/workflows/reusable-workflow.yml
-    with:
-      job-steps: >
-        [
-          {"run": "echo 'Hello from Step 1'"},
-          {"run": "echo 'Hello from Step 2'"}
-        ]
         
     
