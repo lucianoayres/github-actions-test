@@ -1,0 +1,17 @@
+name: Single Dimension Matrix Demo
+run-name: Single Dimension Matrix
+
+on:
+  push
+
+jobs:
+  first_job:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: [10, 12, 14]
+    steps:
+      - id: step1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.version }}
