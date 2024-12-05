@@ -5,7 +5,7 @@ run-name: "✨ Workflow run for branch ${{ github.ref_name }}"
 on:
   push:
     branches:
-      - main
+      - '!main'
 
 jobs:
   first_job:
