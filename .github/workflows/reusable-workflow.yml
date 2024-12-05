@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        step: ${{ fromJSON(inouts.job-steps) }}
+        step: ${{ fromJSON(inputs.job-steps) }}
     steps:
       - name: Run Step
         run: ${{ matrix.step.run }}
