@@ -1,11 +1,11 @@
 name: Output for a Job Demo
 
+run-name: "✨ Workflow run for branch ${{ github.ref_name }}"
+
 on:
   push:
     branches:
       - main
-  
-run-name: "::notice Workflow run for branch ${{ github.ref_name }}"
 
 jobs:
   first_job:
@@ -25,5 +25,5 @@ jobs:
       - env:
           OUTPUT1: ${{needs.first_job.outputs.output1}}
           OUTPUT2: ${{needs.first_job.outputs.output2}}
-        run: echo "$OUTPUT1 $OUTPUT2"
+        run: echo "::notice $OUTPUT1 $OUTPUT2"
     
