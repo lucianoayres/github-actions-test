@@ -10,7 +10,7 @@ defaults:
 
 jobs:
   first_job:
-    runs-on: &default-runner ubuntu-latest
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
@@ -20,7 +20,7 @@ jobs:
         run: pwd
 
   second_job:
-    runs-on: *default-runner
+    runs-on: ubuntu-latest
     steps:
       - id: step1
         run: pwd
