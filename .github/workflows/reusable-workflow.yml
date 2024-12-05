@@ -12,5 +12,5 @@ jobs:
   default_job:
     runs-on: ubuntu-latest
     steps:
-      - name: Run Step
-        run: echo '${{ fromJSON(inputs.job-steps) }}'
+      - name: Print Message
+        run: echo "Message received: ${{ inputs.message }}"
