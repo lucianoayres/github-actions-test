@@ -1,0 +1,33 @@
+name: Setting Default Shell and Working Directory for a Job
+run-name: 🖥️ Default Shell and Working Directory 
+
+on:
+  [push]
+
+defaults:
+  run:
+    working-directory: ./test
+
+jobs:
+  first_job:
+    runs-on: &default-runner ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./scripts
+    steps:
+      - id: step1
+        run: pwd
+
+  second_job:
+    runs-on: *default-runner
+    steps:
+      - id: step1
+        run: pwd
+
+  third_job:
+    uses: ./.github/workflows/reusable-workflow.yml
+    with:
+      job-steps: |
+        - run: echo "::warning Hello from a resusable workflow"
+    
