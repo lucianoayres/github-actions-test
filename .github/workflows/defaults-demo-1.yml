@@ -2,7 +2,9 @@ name: Setting Default Shell and Working Directory for a Job
 run-name: 🖥️ Default Shell and Working Directory 
 
 on:
-  [push]
+  push:
+    branches-ignore:
+      - main
 
 defaults:
   run:
