@@ -1,0 +1,31 @@
+name: Using Job Outputs in a Matrix Job
+run-name: 😊 Job Outputs in a Matrix Job
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  first_job:
+    runs-on: ubuntu-latest
+    outputs:
+      output_1: ${{ steps.gen_output.outputs.output_1 }}
+      output_2: ${{ steps.gen_output.outputs.output_2 }}
+      output_3: ${{ steps.gen_output.outputs.output_3 }}
+    strategy:
+      matrix:
+        version: [1, 2, 3]
+    steps:
+      - name: Generate output
+        id: gen_output
+        run: |
+          version="${{ matrix.version }}"
+          echo "output_${version}=${version}" >> "$GITHUB_OUTPUT"
+          echo '${{ toJSON(github.outputs) }}'
+  
+  second_job:
+    runs-on: ubuntu-latest
+    needs: [first_job]
+    steps:
+      - run: echo '${{ toJSON(needs.first_job.outputs) }}'
