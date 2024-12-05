@@ -2,8 +2,10 @@ name: Single Dimension Matrix Demo
 run-name: Single Dimension Matrix
 
 on:
-  push
-
+  push:
+    branches-ignore:
+      - main
+      
 jobs:
   first_job:
     runs-on: ubuntu-latest
