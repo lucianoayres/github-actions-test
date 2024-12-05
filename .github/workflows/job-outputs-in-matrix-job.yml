@@ -3,7 +3,7 @@ run-name: 😊 Job Outputs in a Matrix Job
 
 on:
   push:
-    branches:
+    branches-ignore:
       - main
 
 jobs:
