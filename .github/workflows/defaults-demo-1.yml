@@ -28,6 +28,10 @@ jobs:
   third_job:
     uses: ./.github/workflows/reusable-workflow.yml
     with:
-      job-steps: |
-        - run: echo "::warning Hello from a resusable workflow"
+      job-steps: >
+        [
+          {"name": "Step 1", "run": "echo 'Hello from Step 1'"},
+          {"name": "Step 2", "run": "echo 'Hello from Step 2'"}
+        ]
+        
     
