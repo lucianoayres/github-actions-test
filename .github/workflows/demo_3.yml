@@ -3,7 +3,7 @@ run-name: Demo 3 Test
 on:
   push:
     branches:
-      - ! main
+      - '!main'
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
