@@ -11,4 +11,9 @@ on:
 jobs:
   default_job:
     runs-on: ubuntu-latest
-    steps: ${{ fromJSON(inputs.job-steps) }}
+    strategy:
+      matrix:
+        step: ${{ fromJSON(inouts.job-steps) }}
+    steps:
+      - name: Run Step
+        run: ${{ matrix.step.run }}
