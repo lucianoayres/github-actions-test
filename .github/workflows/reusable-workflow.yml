@@ -1,5 +1,5 @@
 name: Reusable Workflow
-run-name: Reusable Workflow
+run-name: Reusable Workflow Example
 
 on:
   workflow_call:
@@ -12,5 +12,6 @@ jobs:
   default_job:
     runs-on: ubuntu-latest
     steps:
-      - name: Print Message
-        run: echo "Message received: ${{ inputs.message }}"
+      - name: Print message
+        run: |
+          echo "Message: ${{ inputs.message }}"
