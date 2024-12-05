@@ -2,7 +2,9 @@ name: Multi-Dimension Matrix Demo
 run-name: Multi-Dimension Matrix
 
 on:
-  push
+  push:
+    branches-ignore:
+      - main
 
 jobs:
   first_job:
