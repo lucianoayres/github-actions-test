@@ -1,0 +1,17 @@
+name: Multi-Dimension Matrix Demo
+run-name: Multi-Dimension Matrix
+
+on:
+  push
+
+jobs:
+  first_job:
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-20.04]
+        version: [10, 12, 14]
+    runs-on: $ {{ matrix.os }}
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.version }}
