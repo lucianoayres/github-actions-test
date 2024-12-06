@@ -1,7 +1,10 @@
 name: Docker Container Action Demo
 run-name: Docker Container Action
 
-on: [push]
+on:
+  push:
+    branches-ignore:
+      - main
 
 jobs:
   hello_world_job:
