@@ -15,15 +15,15 @@ on:
         default: "staging"
       dry-run:
         description: "Performan a dry run without actual deployment"
-        required: false
         type: boolean
         default: true
       version:
         description: "Version to deploy"
-        required: false
+        required: true
         default: "latest"
         type: string
       test-boolean:
+        required: true
         type: boolean
       test-string:
         default: "latest"
