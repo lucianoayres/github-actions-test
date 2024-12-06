@@ -12,7 +12,7 @@ jobs:
               run: env
             - name: Print the vars to STDOUT
               run: |
-                  echo API_KEY = ${{ vars.DUMMY_VAR }}
+                  echo DUMMY_VAR = ${{ vars.DUMMY_VAR }}
                   echo API_KEY = ${{ secrets.DUMMY_API_KEY }}
                   echo CI = $CI
                   echo GITHUB_ACTION = $GITHUB_ACTION
