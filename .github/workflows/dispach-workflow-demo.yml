@@ -1,0 +1,44 @@
+name: Dispatch Workflow
+run-name: Dispatch Workflow Demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "The environment to deploy to"
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+          - testing
+        default: "staging"
+      dry-run:
+        description: "Performan a dry run without actual deployment"
+        required: false
+        type: boolean
+        default: true
+      version:
+        description: "Version to deploy"
+        required: false
+        default: "latest"
+        type: string
+      test-boolean:
+        type: boolean
+      test-string:
+        default: "latest"
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Display Inputs
+        run: |
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Dry Run: ${{ github.event.inputs.dry_run }}"
+          echo "Version: ${{ github.event.inputs.version }}"
+          echo "Test Boolean: ${{ github.event.inputs.test_boolean }}"
+          echo "Test String: ${{ github.event.inputs.test_string }}"
+          
+        
+        
