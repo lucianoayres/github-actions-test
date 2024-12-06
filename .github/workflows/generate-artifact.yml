@@ -20,7 +20,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - id: step001
       - name: Create File
         run: |
           echo "Hello, ${{ github.event.inputs.name }}!" > artifact.txt
